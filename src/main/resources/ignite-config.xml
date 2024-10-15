@@ -1,0 +1,239 @@
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="         http://www.springframework.org/schema/beans              http://www.springframework.org/schema/beans/spring-beans.xsd              http://www.springframework.org/schema/util              http://www.springframework.org/schema/util/spring-util.xsd">
+    <!-- Data source bean -->
+    <bean class="com.mysql.cj.jdbc.MysqlDataSource" id="mysqlDataSource">
+        <property name="URL" value="jdbc:mysql://218.78.35.94:3306/ignite_persis"/>
+        <property name="user" value="root"/>
+        <property name="password" value="65316817"/>
+    </bean>
+
+    <bean class="org.apache.ignite.configuration.IgniteConfiguration">
+        <property name="discoverySpi">
+            <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+                <property name="ipFinder">
+                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">
+                        <property name="addresses">
+                            <list>
+                                <!-- In distributed environment, replace with actual host IP address. -->
+                                <value>127.0.0.1:47500..47509</value>
+                            </list>
+                        </property>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+        <property name="transactionConfiguration">
+            <bean class="org.apache.ignite.configuration.TransactionConfiguration">
+                <!--Set the timeout to 20 seconds-->
+                <property name="TxTimeoutOnPartitionMapExchange" value="20000"/>
+<!--                <property name="txSerializableEnabled" value="true"/>-->
+            </bean>
+        </property>
+        <!-- Enabling the peer-class loading feature. -->
+        <property name="peerClassLoadingEnabled" value="true"/>
+
+        <!--
+          Labeling Data Nodes with special attribute. This attribute is checked by common.filters.DataNodeFilters
+          which decides where caches have to be deployed.
+          -->
+        <property name="userAttributes">
+            <map key-type="java.lang.String" value-type="java.lang.Boolean">
+                <entry key="data.node" value="true"/>
+            </map>
+        </property>
+
+        <!-- Configuring caches that will be deployed on Data Nodes -->
+        <property name="cacheConfiguration">
+            <list>
+                <!-- Cache for Vehicles' records -->
+                <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                    <!--
+                    Enabling a special nodes filter for the cache. The filter will make sure that the cache
+                    will be deployed only on Data Nodes, the nodes that have 'data.node' attribute in the local
+                    node map.
+                  -->
+                    <property name="nodeFilter">
+                        <bean class="com.nomura.components.filter.DataNodeFilter"/>
+                    </property>
+                    <property name="name" value="vehicles"/>
+                    <property name="cacheMode" value="PARTITIONED"/>
+                    <property name="atomicityMode" value="TRANSACTIONAL"/>
+                    <property name="readThrough" value="true"/>
+                    <property name="writeThrough" value="true"/>
+                    <property name="cacheStoreFactory">
+                        <bean class="org.apache.ignite.cache.store.jdbc.CacheJdbcPojoStoreFactory">
+                            <property name="dataSourceBean" value="mysqlDataSource"/>
+                            <property name="dialect">
+                                <bean class="org.apache.ignite.cache.store.jdbc.dialect.MySQLDialect"/>
+                            </property>
+                            <property name="types">
+                                <list>
+                                    <bean class="org.apache.ignite.cache.store.jdbc.JdbcType">
+                                        <property name="cacheName" value="vehicles"/>
+                                        <property name="keyType" value="java.lang.Integer"/>
+<!--                                        <property name="valueType" value="com.nomura."/>-->
+                                        <!--Specify the schema if applicable -->
+                                        <!--property name="databaseSchema" value="MY_DB_SCHEMA"/-->
+                                        <property name="databaseTable" value="vehicles"/>
+                                        <property name="keyFields">
+                                            <list>
+                                                <bean class="org.apache.ignite.cache.store.jdbc.JdbcTypeField">
+                                                    <constructor-arg>
+                                                        <util:constant static-field="java.sql.Types.INTEGER"/>
+                                                    </constructor-arg>
+                                                    <constructor-arg value="id"/>
+                                                    <constructor-arg value="int"/>
+                                                    <constructor-arg value="id"/>
+                                                </bean>
+                                            </list>
+                                        </property>
+                                        <property name="valueFields">
+                                            <list>
+                                                <bean class="org.apache.ignite.cache.store.jdbc.JdbcTypeField">
+                                                    <constructor-arg>
+                                                        <util:constant static-field="java.sql.Types.INTEGER"/>
+                                                    </constructor-arg>
+                                                    <constructor-arg value="id"/>
+                                                    <constructor-arg value="int"/>
+                                                    <constructor-arg value="id"/>
+                                                </bean>
+                                                <bean class="org.apache.ignite.cache.store.jdbc.JdbcTypeField">
+                                                    <constructor-arg>
+                                                        <util:constant static-field="java.sql.Types.VARCHAR"/>
+                                                    </constructor-arg>
+                                                    <constructor-arg value="name"/>
+                                                    <constructor-arg value="java.lang.String"/>
+                                                    <constructor-arg value="name"/>
+                                                </bean>
+                                                <bean class="org.apache.ignite.cache.store.jdbc.JdbcTypeField">
+                                                    <constructor-arg>
+                                                        <util:constant static-field="java.sql.Types.TIMESTAMP"/>
+                                                    </constructor-arg>
+                                                    <constructor-arg value="year"/>
+                                                    <constructor-arg value="java.util.Date"/>
+                                                    <constructor-arg value="year"/>
+                                                </bean>
+                                                <bean class="org.apache.ignite.cache.store.jdbc.JdbcTypeField">
+                                                    <constructor-arg>
+                                                        <util:constant static-field="java.sql.Types.DOUBLE"/>
+                                                    </constructor-arg>
+                                                    <constructor-arg value="price"/>
+                                                    <constructor-arg value="java.lang.Double"/>
+                                                    <constructor-arg value="price"/>
+                                                </bean>
+                                            </list>
+                                        </property>
+                                    </bean>
+                                </list>
+                            </property>
+                        </bean>
+                    </property>
+                </bean>
+
+                <!-- Cache for Maintenance records -->
+                <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                    <property name="name" value="maintenance"/>
+                    <property name="nodeFilter">
+                        <bean class="com.nomura.components.filter.DataNodeFilter"/>
+                    </property>
+                    <property name="cacheMode" value="PARTITIONED"/>
+                    <property name="atomicityMode" value="TRANSACTIONAL"/>
+                    <property name="readThrough" value="true"/>
+                    <property name="writeThrough" value="true"/>
+                    <property name="cacheStoreFactory">
+                        <bean class="org.apache.ignite.cache.store.jdbc.CacheJdbcPojoStoreFactory">
+                            <property name="dataSourceBean" value="mysqlDataSource"/>
+                            <property name="dialect">
+                                <bean class="org.apache.ignite.cache.store.jdbc.dialect.MySQLDialect"/>
+                            </property>
+                            <property name="types">
+                                <list>
+                                    <bean class="org.apache.ignite.cache.store.jdbc.JdbcType">
+                                        <property name="cacheName" value="maintenance"/>
+                                        <property name="keyType" value="java.lang.Integer"/>
+                                        <!--                                        <property name="valueType" value="com.nomura."/>-->
+                                        <!--Specify the schema if applicable -->
+                                        <!--property name="databaseSchema" value="MY_DB_SCHEMA"/-->
+                                        <property name="databaseTable" value="maintenance"/>
+                                        <property name="keyFields">
+                                            <list>
+                                                <bean class="org.apache.ignite.cache.store.jdbc.JdbcTypeField">
+                                                    <constructor-arg>
+                                                        <util:constant static-field="java.sql.Types.INTEGER"/>
+                                                    </constructor-arg>
+                                                    <constructor-arg value="id"/>
+                                                    <constructor-arg value="int"/>
+                                                    <constructor-arg value="id"/>
+                                                </bean>
+                                            </list>
+                                        </property>
+                                        <property name="valueFields">
+                                            <list>
+                                                <bean class="org.apache.ignite.cache.store.jdbc.JdbcTypeField">
+                                                    <constructor-arg>
+                                                        <util:constant static-field="java.sql.Types.INTEGER"/>
+                                                    </constructor-arg>
+                                                    <constructor-arg value="id"/>
+                                                    <constructor-arg value="java.lang.Integer"/>
+                                                    <constructor-arg value="id"/>
+                                                </bean>
+                                                <bean class="org.apache.ignite.cache.store.jdbc.JdbcTypeField">
+                                                    <constructor-arg>
+                                                        <util:constant static-field="java.sql.Types.INTEGER"/>
+                                                    </constructor-arg>
+                                                    <constructor-arg value="vehicleId"/>
+                                                    <constructor-arg value="java.lang.Integer"/>
+                                                    <constructor-arg value="vehicleId"/>
+                                                </bean>
+                                                <bean class="org.apache.ignite.cache.store.jdbc.JdbcTypeField">
+                                                    <constructor-arg>
+                                                        <util:constant static-field="java.sql.Types.TIMESTAMP"/>
+                                                    </constructor-arg>
+                                                    <constructor-arg value="date"/>
+                                                    <constructor-arg value="java.util.Date"/>
+                                                    <constructor-arg value="date"/>
+                                                </bean>
+                                            </list>
+                                        </property>
+                                    </bean>
+                                </list>
+                            </property>
+                        </bean>
+                    </property>
+                    <!-- Configuring SQL schema. -->
+<!--                    <property name="queryEntities">-->
+<!--                        <list>-->
+<!--                            <bean class="org.apache.ignite.cache.QueryEntity">-->
+<!--                                &lt;!&ndash; Setting indexed type's key class &ndash;&gt;-->
+<!--                                <property name="keyType" value="java.lang.Integer"/>-->
+
+<!--                                &lt;!&ndash; Setting indexed type's value class &ndash;&gt;-->
+<!--                                <property name="valueType"-->
+<!--                                          value="services.maintenance.common.Maintenance"/>-->
+
+<!--                                &lt;!&ndash; Defining fields that will be either indexed or queryable.-->
+<!--                                Indexed fields are added to 'indexes' list below.&ndash;&gt;-->
+<!--                                <property name="fields">-->
+<!--                                    <map>-->
+<!--                                        <entry key="vehicleId" value="java.lang.Integer"/>-->
+<!--                                    </map>-->
+<!--                                </property>-->
+
+<!--                                &lt;!&ndash; Defining indexed fields.&ndash;&gt;-->
+<!--                                <property name="indexes">-->
+<!--                                    <list>-->
+<!--                                        &lt;!&ndash; Single field (aka. column) index &ndash;&gt;-->
+<!--                                        <bean class="org.apache.ignite.cache.QueryIndex">-->
+<!--                                            <constructor-arg value="vehicleId"/>-->
+<!--                                        </bean>-->
+<!--                                    </list>-->
+<!--                                </property>-->
+<!--                            </bean>-->
+<!--                        </list>-->
+<!--                    </property>-->
+                </bean>
+            </list>
+        </property>
+    </bean>
+</beans>
