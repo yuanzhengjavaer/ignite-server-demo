@@ -27,7 +27,7 @@
             <bean class="org.apache.ignite.configuration.TransactionConfiguration">
                 <!--Set the timeout to 20 seconds-->
                 <property name="TxTimeoutOnPartitionMapExchange" value="20000"/>
-<!--                <property name="txSerializableEnabled" value="true"/>-->
+                <property name="txSerializableEnabled" value="true"/>
             </bean>
         </property>
         <!-- Enabling the peer-class loading feature. -->
@@ -72,7 +72,7 @@
                                     <bean class="org.apache.ignite.cache.store.jdbc.JdbcType">
                                         <property name="cacheName" value="vehicles"/>
                                         <property name="keyType" value="java.lang.Integer"/>
-<!--                                        <property name="valueType" value="com.nomura."/>-->
+                                        <!--                                        <property name="valueType" value="com.nomura."/>-->
                                         <!--Specify the schema if applicable -->
                                         <!--property name="databaseSchema" value="MY_DB_SCHEMA"/-->
                                         <property name="databaseTable" value="vehicles"/>
@@ -129,6 +129,40 @@
                             </property>
                         </bean>
                     </property>
+                    <!--                     Configuring SQL schema. -->
+                    <property name="queryEntities">
+                        <list>
+                            <bean class="org.apache.ignite.cache.QueryEntity">
+                                <!-- Setting indexed type's key class -->
+                                <property name="keyType" value="java.lang.Integer"/>
+
+                                <!-- Setting indexed type's value class -->
+                                <property name="valueType"
+                                          value="com.nomura.model.po.Vehicle"/>
+
+                                <!-- Defining fields that will be either indexed or queryable.
+                                Indexed fields are added to 'indexes' list below.-->
+                                <property name="fields">
+                                    <map>
+                                        <entry key="id" value="java.lang.Integer"/>
+                                        <entry key="name" value="java.lang.String"/>
+                                        <entry key="year" value="java.util.Date"/>
+                                        <entry key="price" value="java.lang.Double"/>
+                                    </map>
+                                </property>
+
+                                <!-- Defining indexed fields.-->
+                                <property name="indexes">
+                                    <list>
+                                        <!-- Single field (aka. column) index -->
+                                        <bean class="org.apache.ignite.cache.QueryIndex">
+                                            <constructor-arg value="id"/>
+                                        </bean>
+                                    </list>
+                                </property>
+                            </bean>
+                        </list>
+                    </property>
                 </bean>
 
                 <!-- Cache for Maintenance records -->
@@ -152,9 +186,9 @@
                                     <bean class="org.apache.ignite.cache.store.jdbc.JdbcType">
                                         <property name="cacheName" value="maintenance"/>
                                         <property name="keyType" value="java.lang.Integer"/>
-                                        <!--                                        <property name="valueType" value="com.nomura."/>-->
+                                        <property name="valueType" value="com.nomura.model.po.Maintenance"/>
                                         <!--Specify the schema if applicable -->
-                                        <!--property name="databaseSchema" value="MY_DB_SCHEMA"/-->
+                                        <!--                                       <property name="databaseSchema" value="IGNITE"/>-->
                                         <property name="databaseTable" value="maintenance"/>
                                         <property name="keyFields">
                                             <list>
@@ -163,7 +197,7 @@
                                                         <util:constant static-field="java.sql.Types.INTEGER"/>
                                                     </constructor-arg>
                                                     <constructor-arg value="id"/>
-                                                    <constructor-arg value="int"/>
+                                                    <constructor-arg value="java.lang.Integer"/>
                                                     <constructor-arg value="id"/>
                                                 </bean>
                                             </list>
@@ -201,37 +235,40 @@
                             </property>
                         </bean>
                     </property>
-                    <!-- Configuring SQL schema. -->
-<!--                    <property name="queryEntities">-->
-<!--                        <list>-->
-<!--                            <bean class="org.apache.ignite.cache.QueryEntity">-->
-<!--                                &lt;!&ndash; Setting indexed type's key class &ndash;&gt;-->
-<!--                                <property name="keyType" value="java.lang.Integer"/>-->
+                    <!--                     Configuring SQL schema. -->
+                    <property name="queryEntities">
+                        <list>
+                            <bean class="org.apache.ignite.cache.QueryEntity">
+                                <!-- Setting indexed type's key class -->
+                                <property name="keyType" value="java.lang.Integer"/>
+                                <property name="keyFieldName" value="id"/>
 
-<!--                                &lt;!&ndash; Setting indexed type's value class &ndash;&gt;-->
-<!--                                <property name="valueType"-->
-<!--                                          value="services.maintenance.common.Maintenance"/>-->
+                                <!-- Setting indexed type's value class -->
+                                <property name="valueType"
+                                          value="com.nomura.model.po.Maintenance"/>
 
-<!--                                &lt;!&ndash; Defining fields that will be either indexed or queryable.-->
-<!--                                Indexed fields are added to 'indexes' list below.&ndash;&gt;-->
-<!--                                <property name="fields">-->
-<!--                                    <map>-->
-<!--                                        <entry key="vehicleId" value="java.lang.Integer"/>-->
-<!--                                    </map>-->
-<!--                                </property>-->
+                                <!-- Defining fields that will be either indexed or queryable.
+                                Indexed fields are added to 'indexes' list below.-->
+                                <property name="fields">
+                                    <map>
+                                        <entry key="id" value="java.lang.Integer"/>
+                                        <entry key="vehicleId" value="java.lang.Integer"/>
+                                        <entry key="date" value="java.util.Date"/>
+                                    </map>
+                                </property>
 
-<!--                                &lt;!&ndash; Defining indexed fields.&ndash;&gt;-->
-<!--                                <property name="indexes">-->
-<!--                                    <list>-->
-<!--                                        &lt;!&ndash; Single field (aka. column) index &ndash;&gt;-->
-<!--                                        <bean class="org.apache.ignite.cache.QueryIndex">-->
-<!--                                            <constructor-arg value="vehicleId"/>-->
-<!--                                        </bean>-->
-<!--                                    </list>-->
-<!--                                </property>-->
-<!--                            </bean>-->
-<!--                        </list>-->
-<!--                    </property>-->
+                                <!-- Defining indexed fields.-->
+                                <property name="indexes">
+                                    <list>
+                                        <!-- Single field (aka. column) index -->
+                                        <bean class="org.apache.ignite.cache.QueryIndex">
+                                            <constructor-arg value="id"/>
+                                        </bean>
+                                    </list>
+                                </property>
+                            </bean>
+                        </list>
+                    </property>
                 </bean>
             </list>
         </property>
