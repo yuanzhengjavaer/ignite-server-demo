@@ -25,7 +25,7 @@ public class IgniteBaseServer {
 //        props.setProperty("DIGNITE_SKIP_CONFIGURATION_CONSISTENCY_CHECK","true");
 //        System.setProperties();
         Ignite ignite = Ignition.start("ignite-config.xml");
-
+        IgniteCache<Integer, String> cache = ignite.getOrCreateCache("cacheEvent");
 //        IgniteCache<Object, Object> vehicleCache = ignite.getOrCreateCache("vehicles");
 //        IgniteTransactions transactions = ignite.transactions();
 //        transactions.txStart();
@@ -40,13 +40,13 @@ public class IgniteBaseServer {
 //        tx1.rollback();
 //        tx1.close();
 
-        IgniteCache<Integer, Maintenance> maintenanceCache = ignite.cache("maintenance");
-        maintenanceCache.loadCache(null);
-        String sql = "INSERT INTO maintenance (id, vehicleId, date) VALUES (?, ?, ?)";
-        SqlFieldsQuery query = new SqlFieldsQuery(sql);
-        query.setArgs(1, 1, new Date());
-        FieldsQueryCursor<List<?>> res = maintenanceCache.query(query);
-        System.out.println(res.getAll());
+//        IgniteCache<Integer, Maintenance> maintenanceCache = ignite.cache("maintenance");
+//        maintenanceCache.loadCache(null);
+//        String sql = "INSERT INTO maintenance (id, vehicleId, date) VALUES (?, ?, ?)";
+//        SqlFieldsQuery query = new SqlFieldsQuery(sql);
+//        query.setArgs(1, 1, new Date());
+//        FieldsQueryCursor<List<?>> res = maintenanceCache.query(query);
+//        System.out.println(res.getAll());
 //        System.out.println("maintenanceCache = " + maintenanceCache);
 //        Object o = maintenanceCache.get(1);
 //        System.out.println("o = " + o);
